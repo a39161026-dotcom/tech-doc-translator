@@ -10,3 +10,6 @@
 
 ## 협업 규칙
 `main`에 직접 푸시하지 않는다. 기능마다 브랜치 → PR → 리뷰 → 머지.
+
+## 실행
+JDK 17 이상. `./gradlew bootRun` (초기에는 H2 인메모리 DB 사용, `application.yml`).
