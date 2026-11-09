@@ -7,7 +7,7 @@ public record SegmentResponse(
         String translatedText,
         SegmentStatus status) {
 
-    static SegmentResponse of(Segment s) {
+    public static SegmentResponse of(Segment s) {
         return new SegmentResponse(s.getId(), s.getSeq(), s.getSourceText(),
                 s.getTranslatedText(), s.getStatus());
     }
