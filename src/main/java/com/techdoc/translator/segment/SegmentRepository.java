@@ -6,4 +6,6 @@ import java.util.List;
 public interface SegmentRepository extends JpaRepository<Segment, Long> {
     List<Segment> findByDocumentIdOrderBySeq(Long documentId);
     List<Segment> findByDocumentIdAndStatus(Long documentId, SegmentStatus status);
+    long countByDocumentId(Long documentId);
+    long countByDocumentIdAndStatus(Long documentId, SegmentStatus status);
 }
