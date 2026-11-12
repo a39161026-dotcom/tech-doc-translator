@@ -19,7 +19,7 @@
 | 401 | 로그인 필요 |
 | 403 | 다른 사용자의 데이터 접근 |
 | 404 | 대상 없음 |
-| 409 | 중복 (이메일, 용어 등) |
+| 409 | 중복 (이메일, 용어 등), 현재 상태에서 할 수 없는 요청 (`INVALID_STATUS`, `ALREADY_TRANSLATING`) |
 
 ## 회원 (F1)
 
@@ -54,12 +54,14 @@
   "title": "Spring Boot Reference",
   "originalFilename": "spring.txt",
   "status": "TRANSLATING",
-  "progress": { "total": 40, "done": 12, "failed": 1 },
+  "segmentCount": 40,
+  "doneCount": 12,
+  "failedCount": 1,
   "createdAt": "2026-11-08T23:00:00"
 }
 ```
 
-`status`: `UPLOADED`, `TRANSLATING`, `DONE`, `FAILED`
+`status`: `UPLOADED`, `TRANSLATING`, `DONE`, `FAILED` (문단이 하나라도 실패하면 `FAILED`)
 
 ## 번역 (F3, F5)
 
@@ -67,10 +69,10 @@
 
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
-| POST | `/api/documents/{id}/translate` | 번역 시작 (비동기, 202 반환) |
+| POST | `/api/documents/{id}/translate` | 번역 시작 (`UPLOADED` 상태만, 비동기, 202 반환) |
 | GET | `/api/documents/{id}/segments` | 문단별 원문·번역 목록 |
 | PATCH | `/api/segments/{id}` | 문단 번역 직접 수정 |
-| POST | `/api/documents/{id}/retry` | 실패한 문단만 다시 번역 |
+| POST | `/api/documents/{id}/retry` | 실패한 문단만 다시 번역 (`FAILED` 상태만, 202 반환) |
 
 `GET /api/documents/{id}/segments` 응답
 ```json
