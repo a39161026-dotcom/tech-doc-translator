@@ -1,6 +1,7 @@
 package com.techdoc.translator.common;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -18,5 +19,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponse> handleTooLarge(MaxUploadSizeExceededException e) {
         return ResponseEntity.badRequest().body(new ErrorResponse("FILE_TOO_LARGE", "파일이 너무 큽니다."));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .map(f -> f.getDefaultMessage())
+                .findFirst()
+                .orElse("요청 값이 올바르지 않습니다.");
+        return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_FAILED", message));
     }
 }

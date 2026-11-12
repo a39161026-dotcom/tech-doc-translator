@@ -28,4 +28,11 @@ class FakeTranslatorTest {
         assertThrows(TranslationException.class, () -> translator.translate(text, Map.of()));
         assertEquals("[번역] " + text, translator.translate(text, Map.of()));
     }
+
+    @Test
+    void 용어집의_용어를_번역어로_바꾼다_대소문자_무시() {
+        String result = translator.translate("Dependency Injection is key.",
+                Map.of("dependency injection", "의존성 주입"));
+        assertEquals("[번역] 의존성 주입 is key.", result);
+    }
 }

@@ -1,9 +1,8 @@
 package com.techdoc.translator.document;
 
 import com.techdoc.translator.common.ApiException;
-import com.techdoc.translator.member.DevDataInitializer;
+import com.techdoc.translator.member.CurrentMemberProvider;
 import com.techdoc.translator.member.Member;
-import com.techdoc.translator.member.MemberRepository;
 import com.techdoc.translator.segment.Segment;
 import com.techdoc.translator.segment.SegmentRepository;
 import com.techdoc.translator.segment.SegmentResponse;
@@ -32,16 +31,16 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final SegmentRepository segmentRepository;
-    private final MemberRepository memberRepository;
+    private final CurrentMemberProvider currentMember;
     private final Path uploadDir;
 
     public DocumentService(DocumentRepository documentRepository,
                            SegmentRepository segmentRepository,
-                           MemberRepository memberRepository,
+                           CurrentMemberProvider currentMember,
                            @Value("${app.upload-dir:uploads}") String uploadDir) {
         this.documentRepository = documentRepository;
         this.segmentRepository = segmentRepository;
-        this.memberRepository = memberRepository;
+        this.currentMember = currentMember;
         this.uploadDir = Paths.get(uploadDir);
     }
 
@@ -77,8 +76,7 @@ public class DocumentService {
 
         String storedPath = store(bytes, extension);
 
-        Member member = memberRepository.findByEmail(DevDataInitializer.DEV_EMAIL)
-                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "LOGIN_REQUIRED", "로그인이 필요합니다."));
+        Member member = currentMember.get();
 
         String docTitle = (title == null || title.isBlank()) ? stripExtension(originalFilename) : title.trim();
         Document document = documentRepository.save(

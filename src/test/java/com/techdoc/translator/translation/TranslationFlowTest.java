@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -93,5 +94,20 @@ class TranslationFlowTest {
         mockMvc.perform(post("/api/documents/9999/translate"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("DOCUMENT_NOT_FOUND"));
+    }
+
+    @Test
+    void 용어집에_등록한_용어가_번역에_적용된다() throws Exception {
+        mockMvc.perform(post("/api/terms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sourceTerm\":\"dependency injection\",\"targetTerm\":\"의존성 주입\"}"))
+                .andExpect(status().isCreated());
+        long id = upload("Dependency injection is great.");
+
+        mockMvc.perform(post("/api/documents/" + id + "/translate"))
+                .andExpect(status().isAccepted());
+
+        mockMvc.perform(get("/api/documents/" + id + "/segments"))
+                .andExpect(jsonPath("$[0].translatedText").value("[번역] 의존성 주입 is great."));
     }
 }
