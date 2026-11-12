@@ -44,7 +44,7 @@
 | POST | `/api/documents` | 문서 업로드 (`file`, 선택 `title`) |
 | GET | `/api/documents` | 내 문서 목록 (최신순) |
 | GET | `/api/documents/{id}` | 문서 상세와 진행 상태 |
-| GET | `/api/documents/{id}/result` | 번역 문서 파일 다운로드 |
+| GET | `/api/documents/{id}/result` | 결과 파일 다운로드 (`type`, `format` 쿼리, 아래 참고) |
 | DELETE | `/api/documents/{id}` | 문서 삭제 |
 
 `GET /api/documents/{id}` 응답
@@ -57,6 +57,8 @@
   "segmentCount": 40,
   "doneCount": 12,
   "failedCount": 1,
+  "summaryStatus": "NONE",
+  "summaryLength": null,
   "createdAt": "2026-11-08T23:00:00"
 }
 ```
@@ -84,6 +86,55 @@
 
 `Segment.status`: `PENDING`, `DONE`, `FAILED`
 
+## 요약 (F5)
+
+번역이 끝난(`DONE`) 문서만 요약할 수 있다. 번역처럼 시작 요청과 결과 조회를 분리하고, 프론트는 상태를 주기적으로 조회(폴링)한다. 다시 요약하면 이전 요약을 덮어쓴다.
+
+| 메서드 | 경로 | 설명 |
+| --- | --- | --- |
+| POST | `/api/documents/{id}/summarize` | 요약 시작 (비동기, 202 반환) |
+| GET | `/api/documents/{id}/summary` | 요약 상태와 결과 조회 |
+
+`POST /api/documents/{id}/summarize`
+```json
+// 요청: 요약 길이를 사용자가 고른다
+{ "length": "SHORT" }
+```
+
+`length`: `SHORT`(짧게), `MEDIUM`(보통), `LONG`(길게). 없거나 잘못된 값이면 400.
+
+`GET /api/documents/{id}/summary` 응답
+```json
+{ "status": "DONE", "length": "SHORT", "text": "요약문..." }
+```
+
+`status`: `NONE`(요약 안 함), `SUMMARIZING`, `DONE`, `FAILED`
+
+| HTTP | code | 의미 |
+| --- | --- | --- |
+| 409 | `NOT_READY` | 번역이 끝나지 않은 문서 |
+| 409 | `ALREADY_SUMMARIZING` | 이미 요약 중 |
+| 400 | `VALIDATION_FAILED` | `length`가 없음 |
+| 400 | `INVALID_REQUEST` | 요청 본문을 읽을 수 없음 (없는 `length` 값 등) |
+
+## 결과 파일 다운로드 (F6)
+
+`GET /api/documents/{id}/result?type={type}&format={format}`
+
+| 쿼리 | 값 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `type` | `summary`, `full` | `full` | 요약본 또는 번역 전문 |
+| `format` | `docx`, `md`, `txt` | `md` | 파일 형식. PDF는 한글 폰트 처리 후 추가 예정 |
+
+응답은 파일 다운로드(`Content-Disposition: attachment`)다. 파일 이름은 `문서제목_요약.docx`, `문서제목_번역.md` 형식이다.
+
+| HTTP | code | 의미 |
+| --- | --- | --- |
+| 409 | `NOT_READY` | `type=full`인데 번역이 끝나지 않음 |
+| 409 | `SUMMARY_NOT_READY` | `type=summary`인데 요약이 끝나지 않음 |
+| 400 | `UNSUPPORTED_TYPE` | `type`이 `summary`, `full`이 아님 |
+| 400 | `UNSUPPORTED_FORMAT` | 지원하지 않는 형식 |
+
 ## 용어집 (F4, F9)
 
 | 메서드 | 경로 | 설명 |
@@ -106,6 +157,6 @@
 ## 미정
 
 - 인증 방식 (세션 vs JWT)
-- 지원 파일 형식과 업로드 최대 크기
-- 번역 문서 다운로드 형식 (docx, pdf, md 중)
+- 지원하는 입력 파일 형식과 업로드 최대 크기 (현재 txt, md, 최대 5MB)
+- PDF 출력 (한글 폰트 처리 후 `format=pdf` 추가)
 - 용어 후보 추천(F9) API
