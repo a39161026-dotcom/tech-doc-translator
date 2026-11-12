@@ -37,6 +37,12 @@ public class Term {
         this.note = note;
     }
 
+    public void update(String sourceTerm, String targetTerm, String note) {
+        this.sourceTerm = sourceTerm;
+        this.targetTerm = targetTerm;
+        this.note = note;
+    }
+
     public Long getId() { return id; }
     public Member getMember() { return member; }
     public String getSourceTerm() { return sourceTerm; }

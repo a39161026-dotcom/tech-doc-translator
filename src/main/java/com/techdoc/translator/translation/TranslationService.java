@@ -7,12 +7,15 @@ import com.techdoc.translator.document.DocumentStatus;
 import com.techdoc.translator.segment.Segment;
 import com.techdoc.translator.segment.SegmentRepository;
 import com.techdoc.translator.segment.SegmentStatus;
+import com.techdoc.translator.term.Term;
+import com.techdoc.translator.term.TermRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,15 +26,18 @@ public class TranslationService {
 
     private final DocumentRepository documentRepository;
     private final SegmentRepository segmentRepository;
+    private final TermRepository termRepository;
     private final Translator translator;
     private final TaskExecutor translationExecutor;
 
     public TranslationService(DocumentRepository documentRepository,
                               SegmentRepository segmentRepository,
+                              TermRepository termRepository,
                               Translator translator,
                               TaskExecutor translationExecutor) {
         this.documentRepository = documentRepository;
         this.segmentRepository = segmentRepository;
+        this.termRepository = termRepository;
         this.translator = translator;
         this.translationExecutor = translationExecutor;
     }
@@ -73,13 +79,14 @@ public class TranslationService {
 
         boolean anyFailed = false;
         try {
+            Map<String, String> glossary = loadGlossary(documentId);
             List<Segment> segments = segmentRepository.findByDocumentIdOrderBySeq(documentId);
             for (Segment segment : segments) {
                 if (segment.getStatus() == SegmentStatus.DONE) {
                     continue;
                 }
                 try {
-                    String translated = translator.translate(segment.getSourceText(), Map.of());
+                    String translated = translator.translate(segment.getSourceText(), glossary);
                     segment.complete(translated);
                 } catch (RuntimeException e) {
                     log.warn("문단 번역 실패 (document={}, seq={}): {}", documentId, segment.getSeq(), e.getMessage());
@@ -95,5 +102,17 @@ public class TranslationService {
 
         document.changeStatus(anyFailed ? DocumentStatus.FAILED : DocumentStatus.DONE);
         documentRepository.save(document);
+    }
+
+    /** 문서 주인의 용어집을 (원어 -> 번역어) 맵으로 만든다. */
+    private Map<String, String> loadGlossary(Long documentId) {
+        Long memberId = documentRepository.findMemberId(documentId);
+        Map<String, String> glossary = new LinkedHashMap<>();
+        if (memberId != null) {
+            for (Term term : termRepository.findByMemberId(memberId)) {
+                glossary.put(term.getSourceTerm(), term.getTargetTerm());
+            }
+        }
+        return glossary;
     }
 }
