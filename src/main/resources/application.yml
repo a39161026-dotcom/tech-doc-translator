@@ -20,6 +20,7 @@ spring:
 
 # 로컬 LLM 서버 (모델·서빙 도구 확정 후 수정)
 llm:
+  provider: fake   # fake | (로컬 LLM 구현 후 추가)
   base-url: http://localhost:11434
   model: TBD
 

@@ -8,6 +8,7 @@ import com.techdoc.translator.segment.Segment;
 import com.techdoc.translator.segment.SegmentRepository;
 import com.techdoc.translator.segment.SegmentResponse;
 import com.techdoc.translator.segment.SegmentSplitter;
+import com.techdoc.translator.segment.SegmentStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -89,13 +90,12 @@ public class DocumentService {
         }
         segmentRepository.saveAll(segments);
 
-        return DocumentResponse.of(document, segments.size());
+        return toResponse(document);
     }
 
     @Transactional(readOnly = true)
     public DocumentResponse get(Long id) {
-        Document document = find(id);
-        return DocumentResponse.of(document, segmentRepository.findByDocumentIdOrderBySeq(id).size());
+        return toResponse(find(id));
     }
 
     @Transactional(readOnly = true)
@@ -104,6 +104,14 @@ public class DocumentService {
         return segmentRepository.findByDocumentIdOrderBySeq(id).stream()
                 .map(SegmentResponse::of)
                 .toList();
+    }
+
+    private DocumentResponse toResponse(Document document) {
+        Long id = document.getId();
+        return DocumentResponse.of(document,
+                (int) segmentRepository.countByDocumentId(id),
+                (int) segmentRepository.countByDocumentIdAndStatus(id, SegmentStatus.DONE),
+                (int) segmentRepository.countByDocumentIdAndStatus(id, SegmentStatus.FAILED));
     }
 
     private Document find(Long id) {

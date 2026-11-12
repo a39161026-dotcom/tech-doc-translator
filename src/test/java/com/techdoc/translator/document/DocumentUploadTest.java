@@ -1,5 +1,6 @@
 package com.techdoc.translator.document;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,7 +16,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource(properties = "app.upload-dir=build/test-uploads")
+@TestPropertySource(properties = {
+        "app.upload-dir=build/test-uploads",
+        "spring.datasource.url=jdbc:h2:mem:document-upload;MODE=MySQL;DB_CLOSE_DELAY=-1"
+})
 class DocumentUploadTest {
 
     @Autowired
@@ -27,13 +31,15 @@ class DocumentUploadTest {
                 "file", "guide.txt", "text/plain",
                 "Hello world.\n\nSecond paragraph.\n\nThird.".getBytes());
 
-        mockMvc.perform(multipart("/api/documents").file(file))
+        String body = mockMvc.perform(multipart("/api/documents").file(file))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("guide"))
                 .andExpect(jsonPath("$.status").value("UPLOADED"))
-                .andExpect(jsonPath("$.segmentCount").value(3));
+                .andExpect(jsonPath("$.segmentCount").value(3))
+                .andReturn().getResponse().getContentAsString();
+        long id = ((Number) JsonPath.read(body, "$.id")).longValue();
 
-        mockMvc.perform(get("/api/documents/1/segments"))
+        mockMvc.perform(get("/api/documents/" + id + "/segments"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
                 .andExpect(jsonPath("$[0].seq").value(1))
