@@ -28,6 +28,16 @@ public class Document {
     @Column(nullable = false)
     private DocumentStatus status = DocumentStatus.UPLOADED;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SummaryStatus summaryStatus = SummaryStatus.NONE;
+
+    @Enumerated(EnumType.STRING)
+    private SummaryLength summaryLength;
+
+    @Lob
+    private String summary;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -44,6 +54,20 @@ public class Document {
     public void changeStatus(DocumentStatus status) { this.status = status; }
     public void setResultFilePath(String resultFilePath) { this.resultFilePath = resultFilePath; }
 
+    public void startSummary(SummaryLength length) {
+        this.summaryStatus = SummaryStatus.SUMMARIZING;
+        this.summaryLength = length;
+    }
+
+    public void completeSummary(String summary) {
+        this.summary = summary;
+        this.summaryStatus = SummaryStatus.DONE;
+    }
+
+    public void failSummary() {
+        this.summaryStatus = SummaryStatus.FAILED;
+    }
+
     public Long getId() { return id; }
     public Member getMember() { return member; }
     public String getTitle() { return title; }
@@ -52,5 +76,8 @@ public class Document {
     public String getFilePath() { return filePath; }
     public String getResultFilePath() { return resultFilePath; }
     public DocumentStatus getStatus() { return status; }
+    public SummaryStatus getSummaryStatus() { return summaryStatus; }
+    public SummaryLength getSummaryLength() { return summaryLength; }
+    public String getSummary() { return summary; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

@@ -23,8 +23,9 @@ public class ResultController {
 
     @GetMapping("/result")
     public ResponseEntity<byte[]> download(@PathVariable Long id,
+                                           @RequestParam(value = "type", defaultValue = "full") String type,
                                            @RequestParam(value = "format", defaultValue = "md") String format) {
-        ResultFile file = resultService.build(id, format);
+        ResultFile file = resultService.build(id, type, format);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment().filename(file.filename(), StandardCharsets.UTF_8).build().toString())
