@@ -31,8 +31,8 @@ class FakeSummarizerTest {
     }
 
     @Test
-    void SUMMARY_FAIL이_있으면_실패한다() {
+    void SUMMARY_ERROR이_있으면_실패한다() {
         assertThrows(SummaryException.class,
-                () -> summarizer.summarize(List.of("ok", "SUMMARY_FAIL"), SummaryLength.SHORT));
+                () -> summarizer.summarize(List.of("ok", "SUMMARY_ERROR"), SummaryLength.SHORT));
     }
 }

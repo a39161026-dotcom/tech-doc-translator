@@ -110,7 +110,7 @@ class SummaryFlowTest {
 
     @Test
     void 요약이_실패하면_FAILED로_표시된다() throws Exception {
-        long id = translatedDocument("Good.\n\nSUMMARY_FAIL here.");
+        long id = translatedDocument("Good.\n\nSUMMARY_ERROR here.");
 
         summarize(id, "SHORT");
         mockMvc.perform(get("/api/documents/" + id + "/summary"))
