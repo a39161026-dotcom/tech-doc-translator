@@ -20,9 +20,11 @@ spring:
 
 # 로컬 LLM 서버 (모델·서빙 도구 확정 후 수정)
 llm:
-  provider: fake   # fake | (로컬 LLM 구현 후 추가)
+  provider: fake   # fake | ollama
   base-url: http://localhost:11434
-  model: TBD
+  model: TBD       # ollama 사용 시 예: qwen2.5:3b
+  timeout-seconds: 300
+  summary-chunk-chars: 4000
 
 app:
   upload-dir: uploads
