@@ -1,0 +1,5 @@
+# 로컬 개발용: 실제 Ollama 모델 사용. 실행 시 프로필 local 지정 (SPRING_PROFILES_ACTIVE=local)
+llm:
+  provider: ollama
+  base-url: http://localhost:11434
+  model: qwen2.5:3b
