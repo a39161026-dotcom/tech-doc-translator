@@ -125,4 +125,27 @@ class OllamaIntegrationTest {
 
         assertThrows(SummaryException.class, () -> summarizer.summarize(List.of("문단"), SummaryLength.SHORT));
     }
+
+    @Test
+    void 코드_블록은_LLM_호출_없이_그대로_돌려준다() {
+        OllamaTranslator translator = new OllamaTranslator(client());
+        String code = "```java\npublic interface MemberRepository {}\n```";
+
+        String result = translator.translate(code, Map.of());
+
+        assertEquals(code, result);
+        assertEquals(0, requests.size());
+    }
+
+    @Test
+    void 제목은_샵_표시를_유지하고_글자만_번역한다() {
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        String result = translator.translate("## Pagination", Map.of());
+
+        assertEquals("## 안녕하세요", result);
+        assertEquals(1, requests.size());
+        assertTrue(requests.get(0).contains("Pagination"));
+        assertTrue(!requests.get(0).contains("## Pagination"));
+    }
 }
