@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @ConditionalOnProperty(name = "llm.provider", havingValue = "ollama")
 public class OllamaTranslator implements Translator {
 
-    static final String SYSTEM_PROMPT = """
+    public static final String SYSTEM_PROMPT = """
             You are a professional translator of IT technical documents (English to Korean).
             Rules:
             - Output only the Korean translation. No explanations, no notes.
