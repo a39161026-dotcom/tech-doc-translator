@@ -148,4 +148,27 @@ class OllamaIntegrationTest {
         assertTrue(requests.get(0).contains("Pagination"));
         assertTrue(!requests.get(0).contains("## Pagination"));
     }
+
+    @Test
+    void 원문에_없는_용어는_프롬프트에_넣지_않는다() {
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        translator.translate("Hello world.", Map.of("dirty checking", "더티 체킹"));
+
+        assertTrue(!requests.get(0).contains("더티 체킹"));
+    }
+
+    @Test
+    void 결과가_비정상적으로_길면_한_번_다시_시도하고_그래도_길면_실패한다() {
+        responseBody = "{\"message\":{\"role\":\"assistant\",\"content\":\"" + "가".repeat(300) + "\"}}";
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        assertThrows(TranslationException.class, () -> translator.translate("Pagination", Map.of()));
+        assertEquals(2, requests.size());
+    }
+
+    @Test
+    void 프롬프트에_합니다_어미_문구가_없다() {
+        assertTrue(!OllamaTranslator.SYSTEM_PROMPT.contains("합니다"));
+    }
 }

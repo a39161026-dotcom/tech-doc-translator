@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 @ConditionalOnProperty(name = "llm.provider", havingValue = "ollama")
 public class OllamaTranslator implements Translator {
 
-    static final String SYSTEM_PROMPT = """
+    public static final String SYSTEM_PROMPT = """
             You are a professional translator of IT technical documents (English to Korean).
             Rules:
             - Output only the Korean translation. No explanations, no notes.
             - Keep code, commands, file paths, URLs, and identifiers exactly as they are.
             - Keep Markdown formatting (headings, lists, backticks) unchanged.
             - Use natural, concise Korean typical of developer documentation.
-            - Write every sentence in the polite style ending with -합니다 / -입니다. Never mix in -다 style.
+            - Use a polite, formal tone consistently.
             - Do not leave English words in the middle of Korean sentences, except identifiers,
               class names, annotations and widely used terms (e.g. Spring Boot, DTO, fetch join).
             """;
@@ -54,17 +54,36 @@ public class OllamaTranslator implements Translator {
 
     private String translateText(String text, Map<String, String> glossary) {
         try {
-            return client.chat(SYSTEM_PROMPT, buildUserPrompt(text, glossary));
+            String prompt = buildUserPrompt(text, glossary);
+            String result = client.chat(SYSTEM_PROMPT, prompt);
+            if (isRunaway(text, result)) {
+                // 소형 모델이 내용을 지어내며 길게 답하는 경우가 있어 한 번만 다시 시도한다
+                result = client.chat(SYSTEM_PROMPT, prompt);
+                if (isRunaway(text, result)) {
+                    throw new TranslationException("번역 결과가 원문에 비해 비정상적으로 깁니다.");
+                }
+            }
+            return result;
         } catch (LlmException e) {
             throw new TranslationException(e.getMessage(), e);
         }
     }
 
+    /** 결과가 원문의 3배(최소 80자)를 넘으면 모델이 내용을 지어낸 것으로 본다. */
+    static boolean isRunaway(String source, String result) {
+        return result.length() > Math.max(80, source.length() * 3);
+    }
+
     static String buildUserPrompt(String sourceText, Map<String, String> glossary) {
-        if (glossary.isEmpty()) {
+        String lower = sourceText.toLowerCase();
+        // 원문에 실제로 나오는 용어만 보낸다 (프롬프트를 짧게 유지해 속도와 안정성을 높인다)
+        Map<String, String> relevant = glossary.entrySet().stream()
+                .filter(e -> lower.contains(e.getKey().toLowerCase()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (relevant.isEmpty()) {
             return sourceText;
         }
-        String terms = glossary.entrySet().stream()
+        String terms = relevant.entrySet().stream()
                 .map(e -> "- " + e.getKey() + " => " + e.getValue())
                 .collect(Collectors.joining("\n"));
         return "Glossary (always translate these terms as given):\n" + terms
