@@ -27,6 +27,7 @@ class OllamaIntegrationTest {
     private HttpServer server;
     private final List<String> requests = new CopyOnWriteArrayList<>();
     private volatile int status = 200;
+    private volatile String firstResponseBody = null;
     private volatile String responseBody = "{\"message\":{\"role\":\"assistant\",\"content\":\"안녕하세요\"}}";
 
     @BeforeEach
@@ -34,7 +35,8 @@ class OllamaIntegrationTest {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/api/chat", exchange -> {
             requests.add(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-            byte[] out = responseBody.getBytes(StandardCharsets.UTF_8);
+            String body = (requests.size() == 1 && firstResponseBody != null) ? firstResponseBody : responseBody;
+            byte[] out = body.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "application/json");
             exchange.sendResponseHeaders(status, out.length);
             exchange.getResponseBody().write(out);
@@ -184,5 +186,19 @@ class OllamaIntegrationTest {
     @Test
     void 원문에도_있는_문자는_문제로_보지_않는다() {
         assertTrue(!OllamaTranslator.hasForeignScript("漢字 test", "한자 漢字 테스트"));
+    }
+
+    @Test
+    void 첫_시도가_비정상이면_강화된_지시로_다시_시도해_성공한다() {
+        firstResponseBody = "{\"message\":{\"role\":\"assistant\",\"content\":\"읽기 전용 операции 입니다\"}}";
+        responseBody = "{\"message\":{\"role\":\"assistant\",\"content\":\"읽기 전용 작업입니다\"}}";
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        String result = translator.translate("Read-only operations", Map.of());
+
+        assertEquals("읽기 전용 작업입니다", result);
+        assertEquals(2, requests.size());
+        assertTrue(!requests.get(0).contains("Hangul"));
+        assertTrue(requests.get(1).contains("Hangul"));
     }
 }
