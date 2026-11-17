@@ -56,17 +56,28 @@ public class OllamaTranslator implements Translator {
         try {
             String prompt = buildUserPrompt(text, glossary);
             String result = client.chat(SYSTEM_PROMPT, prompt);
-            if (isRunaway(text, result)) {
-                // 소형 모델이 내용을 지어내며 길게 답하는 경우가 있어 한 번만 다시 시도한다
+            if (isSuspicious(text, result)) {
+                // 모델이 내용을 지어내거나 다른 언어 문자를 섞는 경우가 있어 한 번만 다시 시도한다
                 result = client.chat(SYSTEM_PROMPT, prompt);
-                if (isRunaway(text, result)) {
-                    throw new TranslationException("번역 결과가 원문에 비해 비정상적으로 깁니다.");
+                if (isSuspicious(text, result)) {
+                    throw new TranslationException("번역 결과가 비정상적입니다 (과도하게 길거나 다른 언어 문자가 섞임).");
                 }
             }
             return result;
         } catch (LlmException e) {
             throw new TranslationException(e.getMessage(), e);
         }
+    }
+
+    private static final Pattern FOREIGN_SCRIPT = Pattern.compile("[\\u0400-\\u04FF\\u3040-\\u30FF\\u4E00-\\u9FFF]");
+
+    static boolean isSuspicious(String source, String result) {
+        return isRunaway(source, result) || hasForeignScript(source, result);
+    }
+
+    /** 원문에 없는 키릴 문자·일본어 가나·한자가 결과에 있으면 모델이 다른 언어를 섞은 것으로 본다. */
+    public static boolean hasForeignScript(String source, String result) {
+        return FOREIGN_SCRIPT.matcher(result).find() && !FOREIGN_SCRIPT.matcher(source).find();
     }
 
     /** 결과가 원문의 3배(최소 80자)를 넘으면 모델이 내용을 지어낸 것으로 본다. */
