@@ -76,7 +76,7 @@ public class OllamaTranslator implements Translator {
     }
 
     /** 원문에 없는 키릴 문자·일본어 가나·한자가 결과에 있으면 모델이 다른 언어를 섞은 것으로 본다. */
-    static boolean hasForeignScript(String source, String result) {
+    public static boolean hasForeignScript(String source, String result) {
         return FOREIGN_SCRIPT.matcher(result).find() && !FOREIGN_SCRIPT.matcher(source).find();
     }
 
