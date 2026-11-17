@@ -171,4 +171,18 @@ class OllamaIntegrationTest {
     void 프롬프트에_합니다_어미_문구가_없다() {
         assertTrue(!OllamaTranslator.SYSTEM_PROMPT.contains("합니다"));
     }
+
+    @Test
+    void 원문에_없는_키릴_문자가_섞이면_한_번_다시_시도하고_그래도_섞이면_실패한다() {
+        responseBody = "{\"message\":{\"role\":\"assistant\",\"content\":\"읽기 전용 операции 입니다\"}}";
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        assertThrows(TranslationException.class, () -> translator.translate("Read-only operations", Map.of()));
+        assertEquals(2, requests.size());
+    }
+
+    @Test
+    void 원문에도_있는_문자는_문제로_보지_않는다() {
+        assertTrue(!OllamaTranslator.hasForeignScript("漢字 test", "한자 漢字 테스트"));
+    }
 }
