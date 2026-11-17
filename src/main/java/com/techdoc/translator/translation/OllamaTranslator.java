@@ -57,8 +57,8 @@ public class OllamaTranslator implements Translator {
             String prompt = buildUserPrompt(text, glossary);
             String result = client.chat(SYSTEM_PROMPT, prompt);
             if (isSuspicious(text, result)) {
-                // 모델이 내용을 지어내거나 다른 언어 문자를 섞는 경우가 있어 한 번만 다시 시도한다
-                result = client.chat(SYSTEM_PROMPT, prompt);
+                // 같은 프롬프트로는 같은 결과가 나오기 쉬우므로, 지시를 강화해서 한 번만 다시 시도한다
+                result = client.chat(SYSTEM_PROMPT + RETRY_NOTE, prompt);
                 if (isSuspicious(text, result)) {
                     throw new TranslationException("번역 결과가 비정상적입니다 (과도하게 길거나 다른 언어 문자가 섞임).");
                 }
@@ -68,6 +68,12 @@ public class OllamaTranslator implements Translator {
             throw new TranslationException(e.getMessage(), e);
         }
     }
+
+    /** 첫 시도가 비정상일 때 시스템 프롬프트 뒤에 덧붙이는 강화 지시. */
+    public static final String RETRY_NOTE = """
+
+            IMPORTANT: Write the answer in Korean (Hangul) only. Never use Russian, Chinese or Japanese characters. Output only the translation of the given text and nothing else.
+            """;
 
     private static final Pattern FOREIGN_SCRIPT = Pattern.compile("[\\u0400-\\u04FF\\u3040-\\u30FF\\u4E00-\\u9FFF]");
 
