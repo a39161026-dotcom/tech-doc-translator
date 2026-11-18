@@ -73,7 +73,7 @@
 | --- | --- | --- |
 | POST | `/api/documents/{id}/translate` | 번역 시작 (`UPLOADED` 상태만, 비동기, 202 반환) |
 | GET | `/api/documents/{id}/segments` | 문단별 원문·번역 목록 |
-| PATCH | `/api/segments/{id}` | 문단 번역 직접 수정 |
+| PATCH | `/api/segments/{id}` | 문단 번역 직접 수정 (구현 완료) |
 | POST | `/api/documents/{id}/retry` | 실패한 문단만 다시 번역 (`FAILED` 상태만, 202 반환) |
 
 `GET /api/documents/{id}/segments` 응답
@@ -85,6 +85,18 @@
 ```
 
 `Segment.status`: `PENDING`, `DONE`, `FAILED`
+
+`PATCH /api/segments/{id}` (문단 번역문 직접 수정)
+
+요청
+```json
+{ "translatedText": "직접 고친 번역" }
+```
+- 응답: 수정된 문단 (`segments` 목록의 한 항목과 같은 형식, `status`는 `DONE`)
+- 번역이 끝난(`DONE`) 문서나 실패 문단이 있는(`FAILED`) 문서만 가능
+- 실패·미번역 문단이 더 없으면 문서 상태도 `DONE`으로 바뀜 (그러면 요약·다운로드 가능)
+- 오류: 빈 번역문 400 `VALIDATION_FAILED`, 없는 문단 404 `SEGMENT_NOT_FOUND`, 번역 전 409 `NOT_TRANSLATED`, 번역 중 409 `ALREADY_TRANSLATING`
+- 이미 만든 요약은 자동으로 갱신되지 않음 (다시 요약하면 반영)
 
 ## 요약 (F5)
 
@@ -153,6 +165,10 @@
 ```
 
 같은 사용자가 같은 `sourceTerm`을 다시 등록하면 409.
+
+## CORS
+
+개발용으로 `http://localhost:3000`, `http://localhost:5173`에서 `/api/**` 호출을 허용한다. 다른 주소는 설정 `app.cors.allowed-origins`로 추가한다.
 
 ## 미정
 
