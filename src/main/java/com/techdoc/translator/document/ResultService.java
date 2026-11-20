@@ -25,13 +25,15 @@ import java.util.stream.Collectors;
 /**
  * 결과 파일을 만든다.
  * - type: full(번역 전문), summary(요약본)
- * - format: md, txt, docx (pdf는 한글 폰트 처리 후 추가)
+ * - format: md, txt, docx, pdf (pdf는 한글 폰트를 파일에 포함해서 만든다)
  */
 @Service
 public class ResultService {
 
     private static final MediaType DOCX =
             MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
+    private static final MediaType PDF = MediaType.APPLICATION_PDF;
 
     private final DocumentRepository documentRepository;
     private final SegmentRepository segmentRepository;
@@ -56,8 +58,9 @@ public class ResultService {
             case "md" -> MediaType.parseMediaType("text/markdown;charset=UTF-8");
             case "txt" -> MediaType.parseMediaType("text/plain;charset=UTF-8");
             case "docx" -> DOCX;
+            case "pdf" -> PDF;
             default -> throw new ApiException(HttpStatus.BAD_REQUEST, "UNSUPPORTED_FORMAT",
-                    "지원하지 않는 형식입니다. (md, txt, docx만 가능)");
+                    "지원하지 않는 형식입니다. (md, txt, docx, pdf만 가능)");
         };
 
         Document document = documentRepository.findById(documentId)
@@ -80,9 +83,12 @@ public class ResultService {
             label = "번역";
         }
 
-        byte[] bytes = ext.equals("docx")
-                ? toDocx(document.getTitle() + " (" + label + ")", body)
-                : (body + "\n").getBytes(StandardCharsets.UTF_8);
+        String title = document.getTitle() + " (" + label + ")";
+        byte[] bytes = switch (ext) {
+            case "docx" -> toDocx(title, body);
+            case "pdf" -> PdfBuilder.build(title, body);
+            default -> (body + "\n").getBytes(StandardCharsets.UTF_8);
+        };
 
         document.setResultFilePath(save(documentId + "-" + kind, ext, bytes));
 
