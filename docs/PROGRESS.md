@@ -87,7 +87,7 @@ qwen2.5:3b (Ollama, CPU 전용 PC)로 앱에서 업로드 → 번역 → 요약(
 
 ## 프론트엔드 참고 (김대희)
 
-- API 명세: `docs/API.md`는 아직 `main`에 없고 PR #2(`docs/api-spec` 브랜치)에 있음 (확인 대기)
+- API 명세: `docs/API.md` (초안, 2026-11-19 `main`에 머지). 이상한 곳이 있으면 알려 주세요
 - CORS: `/api/**`에 localhost:3000, localhost:5173 허용 (PR #17). 다른 주소는 `app.cors.allowed-origins` 설정
   - 실제 서버 확인 (2026-11-17): localhost:5173 사전 요청은 200과 허용 헤더, 허용되지 않은 출처는 403
 - 현재는 로그인 없이 호출 가능합니다 (임시 회원으로 동작).
