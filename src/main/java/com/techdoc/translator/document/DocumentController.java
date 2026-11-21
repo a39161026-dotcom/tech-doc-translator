@@ -25,6 +25,11 @@ public class DocumentController {
         return documentService.upload(file, title);
     }
 
+    @GetMapping
+    public List<DocumentResponse> list() {
+        return documentService.list();
+    }
+
     @GetMapping("/{id}")
     public DocumentResponse get(@PathVariable Long id) {
         return documentService.get(id);
