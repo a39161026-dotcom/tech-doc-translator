@@ -91,6 +91,15 @@ public class DocumentService {
         return toResponse(document);
     }
 
+    /** 현재 회원의 문서 목록 (최신순). */
+    @Transactional(readOnly = true)
+    public List<DocumentResponse> list() {
+        Long memberId = currentMember.get().getId();
+        return documentRepository.findByMemberIdOrderByCreatedAtDesc(memberId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public DocumentResponse get(Long id) {
         return toResponse(find(id));
