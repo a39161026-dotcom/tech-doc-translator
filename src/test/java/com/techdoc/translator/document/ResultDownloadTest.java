@@ -60,6 +60,21 @@ class ResultDownloadTest {
     }
 
     @Test
+    void pdf_형식은_한글_글꼴이_포함된_PDF로_받는다() throws Exception {
+        long id = upload("Hello.\n\nWorld.");
+        mockMvc.perform(post("/api/documents/" + id + "/translate")).andExpect(status().isAccepted());
+
+        byte[] pdf = mockMvc.perform(get("/api/documents/" + id + "/result").param("format", "pdf"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", containsString("application/pdf")))
+                .andExpect(header().string("Content-Disposition", containsString(".pdf")))
+                .andReturn().getResponse().getContentAsByteArray();
+
+        org.junit.jupiter.api.Assertions.assertTrue(pdf.length > 1000);
+        org.junit.jupiter.api.Assertions.assertEquals("%PDF-", new String(pdf, 0, 5, java.nio.charset.StandardCharsets.US_ASCII));
+    }
+
+    @Test
     void 번역_전에는_409() throws Exception {
         long id = upload("Not yet.");
 

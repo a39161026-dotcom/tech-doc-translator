@@ -136,7 +136,7 @@
 | 쿼리 | 값 | 기본값 | 설명 |
 | --- | --- | --- | --- |
 | `type` | `summary`, `full` | `full` | 요약본 또는 번역 전문 |
-| `format` | `docx`, `md`, `txt` | `md` | 파일 형식. PDF는 한글 폰트 처리 후 추가 예정 |
+| `format` | `docx`, `md`, `txt`, `pdf` | `md` | 파일 형식. PDF에는 한글 글꼴(NanumGothic)이 포함됨 |
 
 응답은 파일 다운로드(`Content-Disposition: attachment`)다. 파일 이름은 `문서제목_요약.docx`, `문서제목_번역.md` 형식이다.
 
@@ -174,5 +174,4 @@
 
 - 인증 방식 (세션 vs JWT)
 - 지원하는 입력 파일 형식과 업로드 최대 크기 (현재 txt, md, 최대 5MB)
-- PDF 출력 (한글 폰트 처리 후 `format=pdf` 추가)
 - 용어 후보 추천(F9) API
