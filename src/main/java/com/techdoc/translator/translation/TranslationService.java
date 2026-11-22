@@ -11,6 +11,7 @@ import com.techdoc.translator.term.Term;
 import com.techdoc.translator.term.TermRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,9 @@ public class TranslationService {
     private final TermRepository termRepository;
     private final Translator translator;
     private final TaskExecutor translationExecutor;
+
+    @Value("${app.translation.default-glossary:true}")
+    private boolean useDefaultGlossary;
 
     public TranslationService(DocumentRepository documentRepository,
                               SegmentRepository segmentRepository,
@@ -113,6 +117,6 @@ public class TranslationService {
                 glossary.put(term.getSourceTerm(), term.getTargetTerm());
             }
         }
-        return glossary;
+        return useDefaultGlossary ? DefaultGlossary.merge(glossary) : glossary;
     }
 }
