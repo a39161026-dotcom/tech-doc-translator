@@ -1,6 +1,7 @@
 package com.techdoc.translator.translation;
 
 import com.techdoc.translator.llm.LlmException;
+import com.techdoc.translator.llm.LlmTruncatedException;
 import com.techdoc.translator.llm.OllamaClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -55,10 +56,20 @@ public class OllamaTranslator implements Translator {
     private String translateText(String text, Map<String, String> glossary) {
         try {
             String prompt = buildUserPrompt(text, glossary);
-            String result = client.chat(SYSTEM_PROMPT, prompt);
-            if (isSuspicious(text, result)) {
+            int maxTokens = maxTokensFor(text);
+            String result = null;
+            try {
+                result = client.chat(SYSTEM_PROMPT, prompt, maxTokens);
+            } catch (LlmTruncatedException e) {
+                // 끝나지 않는 출력: 아래에서 강화 지시로 한 번 다시 시도한다
+            }
+            if (result == null || isSuspicious(text, result)) {
                 // 같은 프롬프트로는 같은 결과가 나오기 쉬우므로, 지시를 강화해서 한 번만 다시 시도한다
-                result = client.chat(SYSTEM_PROMPT + RETRY_NOTE, prompt);
+                try {
+                    result = client.chat(SYSTEM_PROMPT + RETRY_NOTE, prompt, maxTokens);
+                } catch (LlmTruncatedException e) {
+                    throw new TranslationException("번역이 끝나지 않아 중단했습니다 (출력이 너무 길어짐).");
+                }
                 if (isSuspicious(text, result)) {
                     throw new TranslationException("번역 결과가 비정상적입니다 (과도하게 길거나 다른 언어 문자가 섞임).");
                 }
@@ -67,6 +78,14 @@ public class OllamaTranslator implements Translator {
         } catch (LlmException e) {
             throw new TranslationException(e.getMessage(), e);
         }
+    }
+
+    /**
+     * 번역 한 번에 허용하는 최대 출력 토큰 수. 원문 글자 수의 3배(최소 256, 최대 2048).
+     * 모델이 끝나지 않는 출력을 만들 때 읽기 시간 제한(300초)까지 기다리지 않기 위한 안전장치다.
+     */
+    static int maxTokensFor(String text) {
+        return Math.min(2048, Math.max(256, text.length() * 3));
     }
 
     /** 첫 시도가 비정상일 때 시스템 프롬프트 뒤에 덧붙이는 강화 지시. */

@@ -7,6 +7,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,10 +33,24 @@ public class OllamaClient {
     }
 
     public String chat(String systemPrompt, String userPrompt) {
+        return chat(systemPrompt, userPrompt, 0);
+    }
+
+    /**
+     * @param maxTokens 최대 출력 토큰 수. 0 이하면 제한하지 않는다.
+     *                  제한에 걸려 답이 잘리면 LlmTruncatedException을 던진다
+     *                  (끝나지 않는 출력을 읽기 시간 제한까지 기다리지 않기 위함).
+     */
+    public String chat(String systemPrompt, String userPrompt, int maxTokens) {
+        Map<String, Object> options = new HashMap<>();
+        options.put("temperature", 0.2);
+        if (maxTokens > 0) {
+            options.put("num_predict", maxTokens);
+        }
         Map<String, Object> body = Map.of(
                 "model", model,
                 "stream", false,
-                "options", Map.of("temperature", 0.2),
+                "options", options,
                 "messages", List.of(
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)));
@@ -46,6 +61,9 @@ public class OllamaClient {
                     .body(body)
                     .retrieve()
                     .body(Map.class);
+            if (maxTokens > 0 && response != null && "length".equals(response.get("done_reason"))) {
+                throw new LlmTruncatedException("LLM 출력이 최대 길이(" + maxTokens + " 토큰)에 걸려 잘렸습니다.");
+            }
             Object message = response == null ? null : response.get("message");
             Object content = message instanceof Map<?, ?> m ? m.get("content") : null;
             if (content == null || content.toString().isBlank()) {
