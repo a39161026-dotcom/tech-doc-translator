@@ -201,4 +201,44 @@ class OllamaIntegrationTest {
         assertTrue(!requests.get(0).contains("Hangul"));
         assertTrue(requests.get(1).contains("Hangul"));
     }
+
+    @Test
+    void 번역_요청에는_최대_출력_길이가_들어간다() {
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        translator.translate("Hello", Map.of());
+
+        assertTrue(requests.get(0).contains("\"num_predict\":256"));
+    }
+
+    @Test
+    void 출력이_길이_제한에_걸리면_강화된_지시로_다시_시도해_성공한다() {
+        firstResponseBody = "{\"done_reason\":\"length\",\"message\":{\"role\":\"assistant\",\"content\":\"반복 반복 반복\"}}";
+        responseBody = "{\"done_reason\":\"stop\",\"message\":{\"role\":\"assistant\",\"content\":\"정상 번역입니다\"}}";
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        String result = translator.translate("A normal sentence.", Map.of());
+
+        assertEquals("정상 번역입니다", result);
+        assertEquals(2, requests.size());
+        assertTrue(requests.get(1).contains("Hangul"));
+    }
+
+    @Test
+    void 두_번_모두_길이_제한에_걸리면_실패한다() {
+        responseBody = "{\"done_reason\":\"length\",\"message\":{\"role\":\"assistant\",\"content\":\"반복 반복 반복\"}}";
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        assertThrows(TranslationException.class, () -> translator.translate("A normal sentence.", Map.of()));
+        assertEquals(2, requests.size());
+    }
+
+    @Test
+    void 요약_요청에는_출력_길이_제한을_걸지_않는다() {
+        OllamaSummarizer summarizer = new OllamaSummarizer(client(), 4000);
+
+        summarizer.summarize(List.of("문단1"), SummaryLength.SHORT);
+
+        assertTrue(!requests.get(0).contains("num_predict"));
+    }
 }
