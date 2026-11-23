@@ -203,6 +203,28 @@ class OllamaIntegrationTest {
     }
 
     @Test
+    void 여러_문장_문단은_문장별로_따로_번역해_이어_붙인다() {
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        String result = translator.translate("Run the app in a container. A pipeline builds the image.", Map.of());
+
+        assertEquals(2, requests.size());
+        assertEquals("안녕하세요 안녕하세요", result);
+    }
+
+    @Test
+    void e_g_같은_약어_뒤에서는_문장을_나누지_않는다() {
+        assertEquals(1, OllamaTranslator.splitSentences("Use a tool, e.g. Docker or Podman.").size());
+        assertEquals(1, OllamaTranslator.splitSentences("Spring Boot 3.3 is supported.").size());
+        assertEquals(2, OllamaTranslator.splitSentences("It builds. It tests!").size());
+    }
+
+    @Test
+    void 줄바꿈이_있는_문단은_나누지_않는다() {
+        assertEquals(1, OllamaTranslator.splitSentences("- First item. Second.\n- Another item.").size());
+    }
+
+    @Test
     void 번역_요청에는_최대_출력_길이가_들어간다() {
         OllamaTranslator translator = new OllamaTranslator(client());
 

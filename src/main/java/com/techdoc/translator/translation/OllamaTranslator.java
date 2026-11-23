@@ -6,6 +6,8 @@ import com.techdoc.translator.llm.OllamaClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,7 +55,33 @@ public class OllamaTranslator implements Translator {
         return translateText(sourceText, glossary);
     }
 
+    /**
+     * 한 문단에 문장이 여러 개면 문장별로 따로 번역해 이어 붙인다.
+     * 7b 모델은 긴 입력에서 다른 언어를 섞거나 끝나지 않는 출력을 내는 경우가 있어, 입력을 짧게 나눠 안정성을 높인다.
+     */
     private String translateText(String text, Map<String, String> glossary) {
+        List<String> sentences = splitSentences(text);
+        if (sentences.size() < 2) {
+            return translateOne(text, glossary);
+        }
+        return sentences.stream()
+                .map(sentence -> translateOne(sentence, glossary))
+                .collect(Collectors.joining(" "));
+    }
+
+    private static final Pattern SENTENCE_BOUNDARY = Pattern.compile(
+            "(?<=[.!?])(?<!e\\.g\\.)(?<!i\\.e\\.)(?<!etc\\.)(?<!vs\\.)\\s+(?=[A-Z])");
+
+    /** 줄바꿈이 없는 문단만 문장 단위로 나눈다. 줄바꿈이 있으면(목록 등) 나누지 않는다. */
+    static List<String> splitSentences(String text) {
+        String trimmed = text.strip();
+        if (trimmed.contains("\n")) {
+            return List.of(trimmed);
+        }
+        return Arrays.asList(SENTENCE_BOUNDARY.split(trimmed));
+    }
+
+    private String translateOne(String text, Map<String, String> glossary) {
         try {
             String prompt = buildUserPrompt(text, glossary);
             int maxTokens = maxTokensFor(text);
