@@ -39,4 +39,10 @@ public class DocumentController {
     public List<SegmentResponse> segments(@PathVariable Long id) {
         return documentService.segments(id);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        documentService.delete(id);
+    }
 }

@@ -45,7 +45,7 @@
 | GET | `/api/documents` | 내 문서 목록 (최신순) |
 | GET | `/api/documents/{id}` | 문서 상세와 진행 상태 |
 | GET | `/api/documents/{id}/result` | 결과 파일 다운로드 (`type`, `format` 쿼리, 아래 참고) |
-| DELETE | `/api/documents/{id}` | 문서 삭제 |
+| DELETE | `/api/documents/{id}` | 문서와 문단 삭제 (204). 번역·요약 중이면 409 `DOCUMENT_BUSY`, 없으면 404 |
 
 `GET /api/documents/{id}` 응답
 ```json
