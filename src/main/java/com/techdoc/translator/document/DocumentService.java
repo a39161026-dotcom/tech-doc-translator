@@ -113,6 +113,32 @@ public class DocumentService {
                 .toList();
     }
 
+    /** 문서와 문단을 삭제한다. 번역·요약이 진행 중이면 삭제할 수 없다. */
+    @Transactional
+    public void delete(Long id) {
+        Document document = find(id);
+        if (document.getStatus() == DocumentStatus.TRANSLATING
+                || document.getSummaryStatus() == SummaryStatus.SUMMARIZING) {
+            throw new ApiException(HttpStatus.CONFLICT, "DOCUMENT_BUSY", "번역 또는 요약 중에는 삭제할 수 없습니다.");
+        }
+        String filePath = document.getFilePath();
+        segmentRepository.deleteByDocumentId(id);
+        documentRepository.delete(document);
+        deleteStoredFile(filePath);
+    }
+
+    /** 업로드 원본 파일 삭제. 실패해도 문서 삭제는 막지 않는다. */
+    private void deleteStoredFile(String filePath) {
+        if (filePath == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(Paths.get(filePath));
+        } catch (IOException e) {
+            // 파일이 남아도 DB 기록은 이미 지워졌으므로 무시한다
+        }
+    }
+
     private DocumentResponse toResponse(Document document) {
         Long id = document.getId();
         return DocumentResponse.of(document,
