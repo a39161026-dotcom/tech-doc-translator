@@ -58,7 +58,7 @@
 
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
-| POST | `/api/documents` | 문서 업로드 (`file`, 선택 `title`) |
+| POST | `/api/documents` | 문서 업로드 (`file`: **txt 또는 md, 최대 5MB**, 선택 `title`). 다른 형식은 400 `UNSUPPORTED_FILE_TYPE`, 5MB 초과는 400 `FILE_TOO_LARGE` |
 | GET | `/api/documents` | 내 문서 목록 (최신순) |
 | GET | `/api/documents/{id}` | 문서 상세와 진행 상태 |
 | GET | `/api/documents/{id}/result` | 결과 파일 다운로드 (`type`, `format` 쿼리, 아래 참고) |
@@ -190,5 +190,4 @@
 ## 미정
 
 - 인증 방식 (세션 vs JWT)
-- 지원하는 입력 파일 형식과 업로드 최대 크기 (현재 txt, md, 최대 5MB)
 - 용어 후보 추천(F9) API
