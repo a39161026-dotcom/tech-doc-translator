@@ -73,7 +73,7 @@ public class OllamaTranslator implements Translator {
             "(?<=[.!?])(?<!e\\.g\\.)(?<!i\\.e\\.)(?<!etc\\.)(?<!vs\\.)\\s+(?=[A-Z])");
 
     /** 줄바꿈이 없는 문단만 문장 단위로 나눈다. 줄바꿈이 있으면(목록 등) 나누지 않는다. */
-    static List<String> splitSentences(String text) {
+    public static List<String> splitSentences(String text) {
         String trimmed = text.strip();
         if (trimmed.contains("\n")) {
             return List.of(trimmed);
