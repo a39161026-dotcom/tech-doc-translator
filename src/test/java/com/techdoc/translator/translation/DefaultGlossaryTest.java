@@ -15,6 +15,8 @@ class DefaultGlossaryTest {
         Map<String, String> merged = DefaultGlossary.merge(Map.of());
         assertEquals("작업", merged.get("operations"));
         assertEquals("의존성 주입", merged.get("dependency injection"));
+        assertEquals("전파", merged.get("propagation"));
+        assertEquals("메서드", merged.get("method"));
     }
 
     @Test

@@ -48,7 +48,9 @@ public class OllamaTranslator implements Translator {
         // 제목의 '#' 표시는 보존하고 제목 글자만 번역한다
         Matcher heading = HEADING.matcher(trimmed);
         if (heading.matches()) {
-            return heading.group(1) + " " + translateText(heading.group(2), glossary);
+            // 모델이 번역문에 '#'을 또 붙이는 경우가 있어(예: "# ## 제목") 번역문 앞의 '#'은 지운다
+            String translated = translateText(heading.group(2), glossary).strip().replaceFirst("^#+\\s*", "");
+            return heading.group(1) + " " + translated;
         }
         return translateText(sourceText, glossary);
     }

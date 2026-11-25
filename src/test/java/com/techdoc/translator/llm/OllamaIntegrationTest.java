@@ -152,6 +152,16 @@ class OllamaIntegrationTest {
     }
 
     @Test
+    void 모델이_제목_번역문에_샵을_또_붙여도_하나만_남긴다() {
+        responseBody = "{\"message\":{\"role\":\"assistant\",\"content\":\"## 애플리케이션 배포하기\"}}";
+        OllamaTranslator translator = new OllamaTranslator(client());
+
+        String result = translator.translate("# Deploying the Application", Map.of());
+
+        assertEquals("# 애플리케이션 배포하기", result);
+    }
+
+    @Test
     void 원문에_없는_용어는_프롬프트에_넣지_않는다() {
         OllamaTranslator translator = new OllamaTranslator(client());
 
