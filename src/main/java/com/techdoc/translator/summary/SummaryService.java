@@ -2,6 +2,7 @@ package com.techdoc.translator.summary;
 
 import com.techdoc.translator.common.ApiException;
 import com.techdoc.translator.document.Document;
+import com.techdoc.translator.document.DocumentAccess;
 import com.techdoc.translator.document.DocumentRepository;
 import com.techdoc.translator.document.DocumentStatus;
 import com.techdoc.translator.document.SummaryLength;
@@ -27,19 +28,23 @@ public class SummaryService {
     private final SegmentRepository segmentRepository;
     private final Summarizer summarizer;
     private final TaskExecutor translationExecutor;
+    private final DocumentAccess documentAccess;
 
     public SummaryService(DocumentRepository documentRepository,
                           SegmentRepository segmentRepository,
                           Summarizer summarizer,
-                          TaskExecutor translationExecutor) {
+                          TaskExecutor translationExecutor,
+                          DocumentAccess documentAccess) {
         this.documentRepository = documentRepository;
         this.segmentRepository = segmentRepository;
         this.summarizer = summarizer;
         this.translationExecutor = translationExecutor;
+        this.documentAccess = documentAccess;
     }
 
     /** 요약 시작. 번역이 끝난(DONE) 문서만 가능하고, 다시 요약하면 덮어쓴다. */
     public void start(Long documentId, SummaryLength length) {
+        documentAccess.requireOwner(documentId);
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "DOCUMENT_NOT_FOUND", "문서를 찾을 수 없습니다."));
 
@@ -76,6 +81,7 @@ public class SummaryService {
 
     @Transactional(readOnly = true)
     public SummaryResponse get(Long documentId) {
+        documentAccess.requireOwner(documentId);
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "DOCUMENT_NOT_FOUND", "문서를 찾을 수 없습니다."));
         return new SummaryResponse(document.getSummaryStatus(), document.getSummaryLength(), document.getSummary());

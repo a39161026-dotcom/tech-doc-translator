@@ -2,6 +2,7 @@ package com.techdoc.translator.segment;
 
 import com.techdoc.translator.common.ApiException;
 import com.techdoc.translator.document.Document;
+import com.techdoc.translator.document.DocumentAccess;
 import com.techdoc.translator.document.DocumentRepository;
 import com.techdoc.translator.document.DocumentStatus;
 import org.springframework.http.HttpStatus;
@@ -13,10 +14,13 @@ public class SegmentService {
 
     private final SegmentRepository segmentRepository;
     private final DocumentRepository documentRepository;
+    private final DocumentAccess documentAccess;
 
-    public SegmentService(SegmentRepository segmentRepository, DocumentRepository documentRepository) {
+    public SegmentService(SegmentRepository segmentRepository, DocumentRepository documentRepository,
+                          DocumentAccess documentAccess) {
         this.segmentRepository = segmentRepository;
         this.documentRepository = documentRepository;
+        this.documentAccess = documentAccess;
     }
 
     /**
@@ -29,6 +33,7 @@ public class SegmentService {
         Segment segment = segmentRepository.findById(segmentId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SEGMENT_NOT_FOUND", "문단을 찾을 수 없습니다."));
         Document document = segment.getDocument();
+        documentAccess.requireOwner(document.getId());
 
         if (document.getStatus() == DocumentStatus.TRANSLATING) {
             throw new ApiException(HttpStatus.CONFLICT, "ALREADY_TRANSLATING", "번역 중에는 수정할 수 없습니다.");

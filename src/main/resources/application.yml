@@ -28,3 +28,7 @@ llm:
 
 app:
   upload-dir: uploads
+  auth:
+    enabled: false   # true면 로그인(JWT)이 필요하다. 프론트에 로그인 화면이 생기면 켠다
+    jwt-secret: ${JWT_SECRET:dev-only-secret-change-me-dev-only-secret-change-me}   # 실제 사용 시 환경 변수로 바꾼다
+    token-hours: 24

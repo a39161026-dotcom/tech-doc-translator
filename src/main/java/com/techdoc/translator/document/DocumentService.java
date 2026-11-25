@@ -32,15 +32,18 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final SegmentRepository segmentRepository;
     private final CurrentMemberProvider currentMember;
+    private final DocumentAccess documentAccess;
     private final Path uploadDir;
 
     public DocumentService(DocumentRepository documentRepository,
                            SegmentRepository segmentRepository,
                            CurrentMemberProvider currentMember,
+                           DocumentAccess documentAccess,
                            @Value("${app.upload-dir:uploads}") String uploadDir) {
         this.documentRepository = documentRepository;
         this.segmentRepository = segmentRepository;
         this.currentMember = currentMember;
+        this.documentAccess = documentAccess;
         this.uploadDir = Paths.get(uploadDir);
     }
 
@@ -148,6 +151,7 @@ public class DocumentService {
     }
 
     private Document find(Long id) {
+        documentAccess.requireOwner(id);
         return documentRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "DOCUMENT_NOT_FOUND", "문서를 찾을 수 없습니다."));
     }
