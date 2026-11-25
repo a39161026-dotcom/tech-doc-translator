@@ -2,4 +2,4 @@
 llm:
   provider: ollama
   base-url: http://localhost:11434
-  model: qwen2.5:7b
+  model: exaone3.5:7.8b   # 이전 기본값 qwen2.5:7b는 일부 문단에서 다른 언어를 섞어 실패함 (docs/PROGRESS.md)

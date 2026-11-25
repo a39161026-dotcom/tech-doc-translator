@@ -10,6 +10,8 @@ import java.util.Map;
  * 자주 나오는 IT 용어는 번역어를 미리 알려 준다. 원문에 들어 있는 용어만 프롬프트에 붙는다.
  *
  * 확인된 것: "operations"가 러시아어로 새는 경우 (qwen2.5:7b, 문서 1개).
+ * propagation(전파), method(메서드), boilerplate code(보일러플레이트 코드)는 EXAONE 3.5 시험(2026-11-25)에서
+ * 각각 "확산", "메소드/메서드 혼용", "보일러플레이"로 번역된 것을 바로잡기 위한 것이다.
  * 나머지는 일반적으로 쓰는 번역어를 고른 것이고 모델에서 따로 시험하지 않았다.
  * 회원 용어집에 같은 원어가 있으면 회원 용어집이 우선한다.
  */
@@ -42,6 +44,9 @@ final class DefaultGlossary {
         TERMS.put("middleware", "미들웨어");
         TERMS.put("container", "컨테이너");
         TERMS.put("deprecated", "사용 중단(deprecated)");
+        TERMS.put("propagation", "전파");
+        TERMS.put("method", "메서드");
+        TERMS.put("boilerplate code", "보일러플레이트 코드");
     }
 
     private DefaultGlossary() {}
