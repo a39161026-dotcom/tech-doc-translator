@@ -27,7 +27,24 @@
 | --- | --- | --- |
 | POST | `/api/members` | 회원가입 |
 | POST | `/api/auth/login` | 로그인 |
-| POST | `/api/auth/logout` | 로그아웃 |
+| POST | `/api/auth/logout` | 로그아웃 (204, 아래 참고) |
+| GET | `/api/members/me` | 지금 로그인한 회원 (토큰이 유효한지 확인할 때) |
+
+**인증 방식: JWT.** `app.auth.enabled=true`일 때만 적용되고, 꺼져 있으면(기본값) 지금처럼 로그인 없이 임시 회원으로 동작합니다. 프론트에 로그인 화면이 생기면 켭니다.
+
+- 로그인 응답의 `token`을 저장해 두고, 이후 모든 요청에 `Authorization: Bearer <token>` 헤더를 붙입니다.
+- 토큰 없이 호출하면 401 `LOGIN_REQUIRED`, 만료·위조된 토큰이면 401 `INVALID_TOKEN`입니다. 회원가입·로그인·로그아웃은 토큰 없이 호출합니다.
+- 토큰 유효 시간은 24시간입니다. 로그아웃은 서버에 상태가 없으므로 프론트가 저장한 토큰을 지우면 됩니다.
+- 남의 문서에 접근하면 404 `DOCUMENT_NOT_FOUND`로 답합니다.
+
+`POST /api/auth/login`
+```json
+// 요청
+{ "email": "a@b.com", "password": "******" }
+// 응답 200
+{ "token": "eyJhbGciOi...", "member": { "id": 1, "email": "a@b.com", "nickname": "성헌" } }
+```
+오류: 이메일 또는 비밀번호가 틀리면 401 `INVALID_CREDENTIALS`(어느 쪽이 틀렸는지는 알려 주지 않음), 이미 가입된 이메일로 가입하면 409 `EMAIL_ALREADY_EXISTS`, 비밀번호가 8자 미만이면 400 `VALIDATION_FAILED`.
 
 `POST /api/members`
 ```json

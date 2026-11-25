@@ -2,6 +2,7 @@ package com.techdoc.translator.translation;
 
 import com.techdoc.translator.common.ApiException;
 import com.techdoc.translator.document.Document;
+import com.techdoc.translator.document.DocumentAccess;
 import com.techdoc.translator.document.DocumentRepository;
 import com.techdoc.translator.document.DocumentStatus;
 import com.techdoc.translator.segment.Segment;
@@ -30,6 +31,7 @@ public class TranslationService {
     private final TermRepository termRepository;
     private final Translator translator;
     private final TaskExecutor translationExecutor;
+    private final DocumentAccess documentAccess;
 
     @Value("${app.translation.default-glossary:true}")
     private boolean useDefaultGlossary;
@@ -38,12 +40,14 @@ public class TranslationService {
                               SegmentRepository segmentRepository,
                               TermRepository termRepository,
                               Translator translator,
-                              TaskExecutor translationExecutor) {
+                              TaskExecutor translationExecutor,
+                              DocumentAccess documentAccess) {
         this.documentRepository = documentRepository;
         this.segmentRepository = segmentRepository;
         this.termRepository = termRepository;
         this.translator = translator;
         this.translationExecutor = translationExecutor;
+        this.documentAccess = documentAccess;
     }
 
     /** 번역 시작. UPLOADED 상태의 문서만 가능하다. */
@@ -57,6 +61,7 @@ public class TranslationService {
     }
 
     private void launch(Long documentId, DocumentStatus requiredStatus) {
+        documentAccess.requireOwner(documentId);
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "DOCUMENT_NOT_FOUND", "문서를 찾을 수 없습니다."));
 

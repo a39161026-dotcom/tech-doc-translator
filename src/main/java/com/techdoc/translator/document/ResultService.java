@@ -38,12 +38,15 @@ public class ResultService {
     private final DocumentRepository documentRepository;
     private final SegmentRepository segmentRepository;
     private final Path resultDir;
+    private final DocumentAccess documentAccess;
 
     public ResultService(DocumentRepository documentRepository,
                          SegmentRepository segmentRepository,
+                         DocumentAccess documentAccess,
                          @Value("${app.upload-dir:uploads}") String uploadDir) {
         this.documentRepository = documentRepository;
         this.segmentRepository = segmentRepository;
+        this.documentAccess = documentAccess;
         this.resultDir = Paths.get(uploadDir, "results");
     }
 
@@ -63,6 +66,7 @@ public class ResultService {
                     "지원하지 않는 형식입니다. (md, txt, docx, pdf만 가능)");
         };
 
+        documentAccess.requireOwner(documentId);
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "DOCUMENT_NOT_FOUND", "문서를 찾을 수 없습니다."));
 
