@@ -18,8 +18,8 @@
 | 문단 수동 수정 (PATCH) | 완료 | PR #20. 모델이 새서 실패한 문단 대응 |
 | 프론트 연동 (CORS) | 완료 | PR #17, 실제 서버에서 허용/거부 확인 |
 | F6 결과 파일 | 완료 | md / txt / docx / pdf (PR #24). PDF는 NanumGothic 내장, 요약 PDF 한글 표시 확인 (문서 1개 기준) |
-| F1 회원가입·로그인 | PR 확인 대기 | JWT로 확정 (김대희 11/25). 기본은 꺼짐(`app.auth.enabled=false`)이라 프론트 로그인 화면이 생길 때 켬. 남의 문서 접근은 404 |
-| F8 번역 기록 | 완료 | GET /api/documents (최신순, PR #26), DELETE /api/documents/{id} (테스트 대기) |
+| F1 회원가입·로그인 | 완료 (이메일) | JWT로 확정 (김대희 11/25). 기본은 꺼짐(`app.auth.enabled=false`)이라 프론트 로그인 화면이 생길 때 켬. 남의 문서 접근은 404 |
+| F8 번역 기록 | 완료 | GET /api/documents (최신순, PR #26), DELETE /api/documents/{id} (PR #32) |
 | F9 용어 후보 추천 | 시작 전 | |
 | F10 단어장 연동 | 시작 전 | |
 | 프론트엔드 (React) | 진행 중 | 김대희. 업로드 화면만 있고 서버 연동은 아직 없음. 저장소 `frontend/` 폴더로 합침 (PR #35, `git subtree`). 다음 주까지 메인·결과 화면 통신을 만들기로 함 |
