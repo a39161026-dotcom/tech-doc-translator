@@ -19,11 +19,11 @@ public class Segment {
     @Column(nullable = false)
     private int seq;
 
-    @Lob
-    @Column(nullable = false)
+    // @Lob 대신 TEXT: PostgreSQL에서 @Lob String은 oid로 매핑되어 문제가 된다.
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String sourceText;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String translatedText;
 
     @Enumerated(EnumType.STRING)
