@@ -14,11 +14,14 @@ public class AuthController {
     private final MemberService memberService;
     private final JwtService jwtService;
     private final GoogleTokenVerifier googleTokenVerifier;
+    private final KakaoTokenVerifier kakaoTokenVerifier;
 
-    public AuthController(MemberService memberService, JwtService jwtService, GoogleTokenVerifier googleTokenVerifier) {
+    public AuthController(MemberService memberService, JwtService jwtService,
+                          GoogleTokenVerifier googleTokenVerifier, KakaoTokenVerifier kakaoTokenVerifier) {
         this.memberService = memberService;
         this.jwtService = jwtService;
         this.googleTokenVerifier = googleTokenVerifier;
+        this.kakaoTokenVerifier = kakaoTokenVerifier;
     }
 
     @PostMapping("/login")
@@ -32,6 +35,14 @@ public class AuthController {
     public LoginResponse google(@Valid @RequestBody GoogleLoginRequest request) {
         GoogleTokenVerifier.GoogleUser user = googleTokenVerifier.verify(request.idToken());
         Member member = memberService.findOrCreateSocial("GOOGLE", user.sub(), user.email(), user.name());
+        return new LoginResponse(jwtService.issue(member), MemberResponse.of(member));
+    }
+
+    /** 프론트가 카카오 로그인으로 받은 액세스 토큰을 보내면, 카카오에 확인한 뒤 우리 JWT를 발급한다. */
+    @PostMapping("/kakao")
+    public LoginResponse kakao(@Valid @RequestBody KakaoLoginRequest request) {
+        KakaoTokenVerifier.KakaoUser user = kakaoTokenVerifier.verify(request.accessToken());
+        Member member = memberService.findOrCreateSocial("KAKAO", user.id(), null, user.nickname());
         return new LoginResponse(jwtService.issue(member), MemberResponse.of(member));
     }
 

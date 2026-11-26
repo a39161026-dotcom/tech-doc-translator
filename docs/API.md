@@ -28,6 +28,7 @@
 | POST | `/api/members` | 회원가입 |
 | POST | `/api/auth/login` | 로그인 |
 | POST | `/api/auth/google` | 구글 로그인 (아래 참고) |
+| POST | `/api/auth/kakao` | 카카오 로그인 (아래 참고) |
 | POST | `/api/auth/logout` | 로그아웃 (204, 아래 참고) |
 | GET | `/api/members/me` | 지금 로그인한 회원 (토큰이 유효한지 확인할 때) |
 
@@ -56,6 +57,15 @@
 ```
 처음 로그인하면 자동으로 가입됩니다. 같은 이메일로 이미 가입한 회원이면 그 회원과 연결됩니다. 구글 확인에 실패하면 401 `INVALID_GOOGLE_TOKEN`입니다. 이후에는 이메일 로그인과 똑같이 `token`을 Bearer로 보냅니다.
 프론트 쪽 클라이언트 ID: `142317490993-hj3283vukns16ku0rmno1ruimmimff1n.apps.googleusercontent.com` (공개되어도 되는 값). 승인된 원본은 `http://localhost:5173`입니다.
+
+`POST /api/auth/kakao` (카카오 로그인)
+```json
+// 요청: 카카오 로그인으로 받은 액세스 토큰
+{ "accessToken": "..." }
+// 응답 200: 이메일 로그인과 같은 모양
+{ "token": "eyJhbGciOi...", "member": { "id": 3, "email": "kakao-123456@social.invalid", "nickname": "카카오닉네임" } }
+```
+카카오는 이메일을 받지 못해서 `email`은 자리 표시용 값(`kakao-회원번호@social.invalid`)입니다. 화면에 이메일로 보여 주지 마시고 `nickname`을 쓰세요. 카카오 확인에 실패하거나 다른 앱의 토큰이면 401 `INVALID_KAKAO_TOKEN`입니다.
 
 `POST /api/members`
 ```json

@@ -56,10 +56,15 @@ public class MemberService {
      */
     public Member findOrCreateSocial(String provider, String providerId, String email, String name) {
         return memberRepository.findByProviderAndProviderId(provider, providerId).orElseGet(() -> {
-            String normalized = normalize(email);
-            Member member = memberRepository.findByEmail(normalized).orElse(null);
+            // 이메일을 못 받는 제공자(카카오)는 자리 표시용 이메일을 만들고, 이메일로 기존 회원과 연결하지 않는다.
+            boolean hasEmail = email != null && !email.isBlank();
+            String normalized = hasEmail ? normalize(email)
+                    : provider.toLowerCase(Locale.ROOT) + "-" + providerId + "@social.invalid";
+            Member member = hasEmail ? memberRepository.findByEmail(normalized).orElse(null) : null;
             if (member == null) {
-                String nickname = (name == null || name.isBlank()) ? normalized.substring(0, normalized.indexOf('@')) : name.trim();
+                String nickname = (name == null || name.isBlank())
+                        ? (hasEmail ? normalized.substring(0, normalized.indexOf('@')) : "사용자")
+                        : name.trim();
                 // 비밀번호 로그인은 못 하도록 아무도 모르는 값을 넣는다.
                 member = new Member(normalized, passwordEncoder.encode(UUID.randomUUID().toString()), nickname);
             }
