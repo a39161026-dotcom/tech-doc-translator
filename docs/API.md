@@ -27,6 +27,7 @@
 | --- | --- | --- |
 | POST | `/api/members` | 회원가입 |
 | POST | `/api/auth/login` | 로그인 |
+| POST | `/api/auth/google` | 구글 로그인 (아래 참고) |
 | POST | `/api/auth/logout` | 로그아웃 (204, 아래 참고) |
 | GET | `/api/members/me` | 지금 로그인한 회원 (토큰이 유효한지 확인할 때) |
 
@@ -45,6 +46,16 @@
 { "token": "eyJhbGciOi...", "member": { "id": 1, "email": "a@b.com", "nickname": "성헌" } }
 ```
 오류: 이메일 또는 비밀번호가 틀리면 401 `INVALID_CREDENTIALS`(어느 쪽이 틀렸는지는 알려 주지 않음), 이미 가입된 이메일로 가입하면 409 `EMAIL_ALREADY_EXISTS`, 비밀번호가 8자 미만이면 400 `VALIDATION_FAILED`.
+
+`POST /api/auth/google` (구글 팝업 로그인)
+```json
+// 요청: 구글 로그인 팝업에서 받은 ID 토큰(credential)
+{ "idToken": "eyJhbGciOi..." }
+// 응답 200: 이메일 로그인과 같은 모양
+{ "token": "eyJhbGciOi...", "member": { "id": 2, "email": "a@gmail.com", "nickname": "구글이름" } }
+```
+처음 로그인하면 자동으로 가입됩니다. 같은 이메일로 이미 가입한 회원이면 그 회원과 연결됩니다. 구글 확인에 실패하면 401 `INVALID_GOOGLE_TOKEN`입니다. 이후에는 이메일 로그인과 똑같이 `token`을 Bearer로 보냅니다.
+프론트 쪽 클라이언트 ID: `142317490993-hj3283vukns16ku0rmno1ruimmimff1n.apps.googleusercontent.com` (공개되어도 되는 값). 승인된 원본은 `http://localhost:5173`입니다.
 
 `POST /api/members`
 ```json

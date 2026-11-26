@@ -13,15 +13,25 @@ public class AuthController {
 
     private final MemberService memberService;
     private final JwtService jwtService;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
-    public AuthController(MemberService memberService, JwtService jwtService) {
+    public AuthController(MemberService memberService, JwtService jwtService, GoogleTokenVerifier googleTokenVerifier) {
         this.memberService = memberService;
         this.jwtService = jwtService;
+        this.googleTokenVerifier = googleTokenVerifier;
     }
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         Member member = memberService.authenticate(request.email(), request.password());
+        return new LoginResponse(jwtService.issue(member), MemberResponse.of(member));
+    }
+
+    /** 프론트가 구글 팝업에서 받은 ID 토큰을 보내면, 구글에 확인한 뒤 우리 JWT를 발급한다. */
+    @PostMapping("/google")
+    public LoginResponse google(@Valid @RequestBody GoogleLoginRequest request) {
+        GoogleTokenVerifier.GoogleUser user = googleTokenVerifier.verify(request.idToken());
+        Member member = memberService.findOrCreateSocial("GOOGLE", user.sub(), user.email(), user.name());
         return new LoginResponse(jwtService.issue(member), MemberResponse.of(member));
     }
 

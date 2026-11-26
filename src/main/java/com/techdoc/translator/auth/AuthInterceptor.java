@@ -43,6 +43,6 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
         String path = request.getRequestURI();
-        return path.equals("/api/members") || path.equals("/api/auth/login") || path.equals("/api/auth/logout");
+        return path.equals("/api/members") || path.equals("/api/auth/login") || path.equals("/api/auth/google") || path.equals("/api/auth/logout");
     }
 }
