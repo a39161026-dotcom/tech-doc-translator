@@ -35,7 +35,8 @@ public class Document {
     @Enumerated(EnumType.STRING)
     private SummaryLength summaryLength;
 
-    @Lob
+    // @Lob는 PostgreSQL에서 oid(대형 객체)로 매핑되어 트랜잭션 밖 읽기가 실패한다. TEXT로 지정한다.
+    @Column(columnDefinition = "TEXT")
     private String summary;
 
     @Column(nullable = false, updatable = false)
