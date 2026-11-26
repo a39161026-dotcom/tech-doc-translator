@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.UUID;
 
 @Service
 public class MemberService {
@@ -47,6 +48,24 @@ public class MemberService {
                 .filter(member -> passwordEncoder.matches(password, member.getPassword()))
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS",
                         "이메일 또는 비밀번호가 올바르지 않습니다."));
+    }
+
+    /**
+     * 소셜 로그인 회원을 찾거나 만든다. 제공자 계정이 이미 있으면 그 회원, 없고 같은 이메일 회원이 있으면 연결,
+     * 둘 다 없으면 새로 만든다. 이메일은 제공자가 인증한 것만 받아야 한다(호출하는 쪽에서 확인).
+     */
+    public Member findOrCreateSocial(String provider, String providerId, String email, String name) {
+        return memberRepository.findByProviderAndProviderId(provider, providerId).orElseGet(() -> {
+            String normalized = normalize(email);
+            Member member = memberRepository.findByEmail(normalized).orElse(null);
+            if (member == null) {
+                String nickname = (name == null || name.isBlank()) ? normalized.substring(0, normalized.indexOf('@')) : name.trim();
+                // 비밀번호 로그인은 못 하도록 아무도 모르는 값을 넣는다.
+                member = new Member(normalized, passwordEncoder.encode(UUID.randomUUID().toString()), nickname);
+            }
+            member.linkProvider(provider, providerId);
+            return memberRepository.save(member);
+        });
     }
 
     private static String normalize(String email) {

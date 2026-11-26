@@ -32,3 +32,4 @@ app:
     enabled: false   # true면 로그인(JWT)이 필요하다. 프론트에 로그인 화면이 생기면 켠다
     jwt-secret: ${JWT_SECRET:dev-only-secret-change-me-dev-only-secret-change-me}   # 실제 사용 시 환경 변수로 바꾼다
     token-hours: 24
+    google-client-id: ${GOOGLE_CLIENT_ID:142317490993-hj3283vukns16ku0rmno1ruimmimff1n.apps.googleusercontent.com}   # 공개되어도 되는 값(비밀키 아님)
