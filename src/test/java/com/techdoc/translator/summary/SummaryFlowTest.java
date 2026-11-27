@@ -118,6 +118,56 @@ class SummaryFlowTest {
     }
 
     @Test
+    void 번역_요청에_요약_길이를_주면_번역_뒤_요약까지_이어서_한다() throws Exception {
+        long id = upload(SIX);
+
+        mockMvc.perform(post("/api/documents/" + id + "/translate").param("summaryLength", "SHORT"))
+                .andExpect(status().isAccepted());
+
+        mockMvc.perform(get("/api/documents/" + id))
+                .andExpect(jsonPath("$.status").value("DONE"))
+                .andExpect(jsonPath("$.summaryStatus").value("DONE"))
+                .andExpect(jsonPath("$.summaryLength").value("SHORT"));
+        mockMvc.perform(get("/api/documents/" + id + "/summary"))
+                .andExpect(jsonPath("$.status").value("DONE"))
+                .andExpect(jsonPath("$.text").value("[요약] [번역] A."));
+    }
+
+    @Test
+    void 길이를_주지_않으면_번역만_한다() throws Exception {
+        long id = upload("One.");
+
+        mockMvc.perform(post("/api/documents/" + id + "/translate")).andExpect(status().isAccepted());
+
+        mockMvc.perform(get("/api/documents/" + id))
+                .andExpect(jsonPath("$.status").value("DONE"))
+                .andExpect(jsonPath("$.summaryStatus").value("NONE"));
+    }
+
+    @Test
+    void 번역이_실패하면_요약은_하지_않는다() throws Exception {
+        long id = upload("Good.\n\nFAIL here.");
+
+        mockMvc.perform(post("/api/documents/" + id + "/translate").param("summaryLength", "SHORT"))
+                .andExpect(status().isAccepted());
+
+        mockMvc.perform(get("/api/documents/" + id))
+                .andExpect(jsonPath("$.status").value("FAILED"))
+                .andExpect(jsonPath("$.summaryStatus").value("NONE"));
+    }
+
+    @Test
+    void 번역_요청의_요약_길이가_잘못되면_400() throws Exception {
+        long id = upload("One.");
+
+        mockMvc.perform(post("/api/documents/" + id + "/translate").param("summaryLength", "HUGE"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        mockMvc.perform(get("/api/documents/" + id))
+                .andExpect(jsonPath("$.status").value("UPLOADED"));
+    }
+
+    @Test
     void 요약본을_docx로_내려받는다() throws Exception {
         long id = translatedDocument(SIX);
         summarize(id, "SHORT");

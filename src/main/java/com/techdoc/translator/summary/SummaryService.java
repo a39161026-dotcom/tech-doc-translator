@@ -61,6 +61,11 @@ public class SummaryService {
         translationExecutor.execute(() -> run(documentId, length));
     }
 
+    /** 이미 SUMMARIZING으로 표시된 문서의 요약을 지금 이 스레드에서 실행한다 (번역 직후 이어서 요약할 때). */
+    public void runStarted(Long documentId, SummaryLength length) {
+        run(documentId, length);
+    }
+
     void run(Long documentId, SummaryLength length) {
         Document document = documentRepository.findById(documentId).orElse(null);
         if (document == null) {
