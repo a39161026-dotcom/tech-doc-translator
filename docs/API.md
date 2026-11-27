@@ -109,10 +109,12 @@
 
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
-| POST | `/api/documents/{id}/translate` | 번역 시작 (`UPLOADED` 상태만, 비동기, 202 반환) |
+| POST | `/api/documents/{id}/translate` | 번역 시작 (`UPLOADED` 상태만, 비동기, 202 반환). 선택 쿼리 `summaryLength=SHORT\|MEDIUM\|LONG`을 주면 번역이 모두 성공한 뒤 요약까지 이어서 함 |
 | GET | `/api/documents/{id}/segments` | 문단별 원문·번역 목록 |
 | PATCH | `/api/segments/{id}` | 문단 번역 직접 수정 (구현 완료) |
-| POST | `/api/documents/{id}/retry` | 실패한 문단만 다시 번역 (`FAILED` 상태만, 202 반환) |
+| POST | `/api/documents/{id}/retry` | 실패한 문단만 다시 번역 (`FAILED` 상태만, 202 반환). `summaryLength` 쿼리는 `translate`와 같음 |
+
+**번역과 요약을 한 번에 요청하기**: `POST /api/documents/{id}/translate?summaryLength=SHORT`로 시작하면, 번역이 모두 성공한 순간 문서 `status`는 `DONE`, `summaryStatus`는 `SUMMARIZING`으로 한 번에 바뀝니다. 프론트는 `GET /api/documents/{id}`를 폴링하다가 `summaryStatus`가 `DONE`이 되면 `GET .../summary`와 다운로드를 호출하면 됩니다. 번역이 하나라도 실패하면 요약은 하지 않고 `status`가 `FAILED`가 됩니다(`summaryStatus`는 `NONE`). 잘못된 `summaryLength`는 400 `INVALID_REQUEST`입니다. 쿼리를 생략하면 기존처럼 번역만 합니다.
 
 `GET /api/documents/{id}/segments` 응답
 ```json
