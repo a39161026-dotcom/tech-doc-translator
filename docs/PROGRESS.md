@@ -17,7 +17,7 @@
 | F5 요약 (길이 선택) | 완료 | SHORT / MEDIUM / LONG, 긴 문서는 조각 요약 후 재요약. 번역 요청에 `?summaryLength=`를 붙이면 번역 뒤 요약까지 자동 실행 (PR #45, 11/27 실제 Ollama·PostgreSQL에서 확인) |
 | 문단 수동 수정 (PATCH) | 완료 | PR #20. 모델이 새서 실패한 문단 대응 |
 | 프론트 연동 (CORS) | 완료 | PR #17, 실제 서버에서 허용/거부 확인 |
-| F6 결과 파일 | 완료 | md / txt / docx / pdf (PR #24). PDF는 NanumGothic 내장, 요약 PDF 한글 표시 확인 (문서 1개 기준) |
+| F6 결과 파일 | 완료 | md / txt / docx / pdf (PR #24). PDF는 NanumGothic 내장, 요약 PDF 한글 표시 확인 (문서 1개 기준). 11/28 `.md` 문서의 `#` 제목을 PDF·docx에서 제목 서식으로 출력(PR #47, PDF는 눈으로 확인, docx 모양은 미확인) |
 | F1 회원가입·로그인 | 완료 (이메일·구글·카카오) | JWT로 확정 (김대희 11/25). 구글 `/api/auth/google` (PR #38), 카카오 `/api/auth/kakao` (PR #39). 카카오는 이메일을 못 받아 자리 표시 이메일을 씀. 기본은 꺼짐(`app.auth.enabled=false`)이라 프론트 로그인 화면이 생길 때 켬. 남의 문서 접근은 404 |
 | F8 번역 기록 | 완료 | GET /api/documents (최신순, PR #26), DELETE /api/documents/{id} (PR #32) |
 | F9 용어 후보 추천 | 시작 전 | |
