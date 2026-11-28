@@ -112,16 +112,36 @@ public class ResultService {
                 if (text.isEmpty()) {
                     continue;
                 }
-                XWPFParagraph paragraph = docx.createParagraph();
-                paragraph.setSpacingAfter(200);
-                XWPFRun run = paragraph.createRun();
-                useKoreanFont(run);
-                String[] lines = text.split("\\R");
-                for (int i = 0; i < lines.length; i++) {
-                    if (i > 0) {
+                XWPFParagraph paragraph = null;
+                XWPFRun run = null;
+                boolean firstLine = true;
+                for (String line : text.split("\\R")) {
+                    MarkdownHeading mdHeading = MarkdownHeading.parse(line);
+                    if (mdHeading != null) {
+                        // 제목 줄: #을 빼고 굵고 큰 글씨의 별도 문단으로
+                        XWPFParagraph h = docx.createParagraph();
+                        h.setSpacingAfter(120);
+                        XWPFRun hr = h.createRun();
+                        useKoreanFont(hr);
+                        hr.setBold(true);
+                        hr.setFontSize(mdHeading.fontSize());
+                        hr.setText(mdHeading.text());
+                        paragraph = null;
+                        run = null;
+                        continue;
+                    }
+                    if (paragraph == null) {
+                        paragraph = docx.createParagraph();
+                        paragraph.setSpacingAfter(200);
+                        run = paragraph.createRun();
+                        useKoreanFont(run);
+                        firstLine = true;
+                    }
+                    if (!firstLine) {
                         run.addBreak();
                     }
-                    run.setText(lines[i]);
+                    run.setText(line);
+                    firstLine = false;
                 }
             }
             docx.write(out);

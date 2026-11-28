@@ -46,16 +46,41 @@ final class PdfBuilder {
                 if (text.isEmpty()) {
                     continue;
                 }
-                Paragraph paragraph = new Paragraph(text, bodyFont);
-                paragraph.setLeading(18f);
-                paragraph.setSpacingAfter(10);
-                pdf.add(paragraph);
+                // 블록 안에서 제목 줄(#)은 제목 서식으로, 나머지 줄은 본문으로 나눠 낸다.
+                StringBuilder buffer = new StringBuilder();
+                for (String line : text.split("\\R")) {
+                    MarkdownHeading heading = MarkdownHeading.parse(line);
+                    if (heading == null) {
+                        if (buffer.length() > 0) {
+                            buffer.append('\n');
+                        }
+                        buffer.append(line);
+                        continue;
+                    }
+                    flush(pdf, buffer, bodyFont);
+                    Paragraph h = new Paragraph(heading.text(), new Font(baseFont, heading.fontSize()));
+                    h.setSpacingBefore(6);
+                    h.setSpacingAfter(8);
+                    pdf.add(h);
+                }
+                flush(pdf, buffer, bodyFont);
             }
             pdf.close();
             return out.toByteArray();
         } catch (DocumentException | IOException e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_BUILD_FAILED", "PDF 파일을 만들지 못했습니다.");
         }
+    }
+
+    private static void flush(Document pdf, StringBuilder buffer, Font bodyFont) throws DocumentException {
+        if (buffer.length() == 0) {
+            return;
+        }
+        Paragraph paragraph = new Paragraph(buffer.toString(), bodyFont);
+        paragraph.setLeading(18f);
+        paragraph.setSpacingAfter(10);
+        pdf.add(paragraph);
+        buffer.setLength(0);
     }
 
     private static byte[] loadFont() throws IOException {
