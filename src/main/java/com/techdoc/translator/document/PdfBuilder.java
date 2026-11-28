@@ -49,8 +49,8 @@ final class PdfBuilder {
                 // 블록 안에서 제목 줄(#)은 제목 서식으로, 나머지 줄은 본문으로 나눠 낸다.
                 StringBuilder buffer = new StringBuilder();
                 for (String line : text.split("\\R")) {
-                    MarkdownHeading heading = MarkdownHeading.parse(line);
-                    if (heading == null) {
+                    MarkdownHeading mdHeading = MarkdownHeading.parse(line);
+                    if (mdHeading == null) {
                         if (buffer.length() > 0) {
                             buffer.append('\n');
                         }
@@ -58,7 +58,7 @@ final class PdfBuilder {
                         continue;
                     }
                     flush(pdf, buffer, bodyFont);
-                    Paragraph h = new Paragraph(heading.text(), new Font(baseFont, heading.fontSize()));
+                    Paragraph h = new Paragraph(mdHeading.text(), new Font(baseFont, mdHeading.fontSize()));
                     h.setSpacingBefore(6);
                     h.setSpacingAfter(8);
                     pdf.add(h);
